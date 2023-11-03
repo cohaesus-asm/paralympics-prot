@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package paralympics.content.v1;
+
+option go_package = "go.soon.build/bpa/website/protogen-go/content/social/v1;social";
+
+// Social networks for links
+enum SocialNetwork {
+  Facebook = 0;
+  Twitter = 1;
+  Instagram = 2;
+}
+
+// Represents a specific profile on a social network
+message SocialProfile {
+  SocialNetwork network = 1;
+  string id = 2;
+}

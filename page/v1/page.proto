@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package paralympics.pages.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "content/v1/content.proto";
+
+option go_package = "go.soon.build/bpa/website/protogen-go/pages/v1;pages";
+
+// Paralympics Page Service
+service PageManager {
+  // Get a page by it's unique by UUID
+  rpc PageByID(PageByIDRequest) returns (Page) {}
+  // Get a page by it's unique slug
+  rpc PageBySlug(PageBySlugRequest) returns (Page) {}
+  // Lists all the Pages
+  rpc ListPages(ListPagesRequest) returns (ListPagesResponse) {}
+  // Creates or Updates a page
+  rpc PutPage(Page) returns (Page) {}
+  // Deletes an page
+  rpc DeletePage(Page) returns (google.protobuf.Empty) {}
+  // Reorders pages in a collection
+  rpc ReorderPage(ReorderPageRequest) returns (google.protobuf.Empty) {}
+  // List page content
+  rpc PageContent(PageContentRequest) returns (stream content.v1.ContentModule) {}
+  // Creates or Updates page content
+  rpc PutPageContent(stream content.v1.ContentModule) returns (stream content.v1.ContentModule) {}
+}
+
+// A generic Page stored in the content service
+message Page {
+  string id = 1;
+  string slug = 2;
+  string title = 3;
+  google.protobuf.Timestamp create_date = 4;
+  google.protobuf.Timestamp update_date = 5;
+  google.protobuf.Timestamp delete_date = 6;
+  content.v1.Image img_hero = 7;
+  string img_hero_alt = 8;
+  Collection collection = 9;
+  int64 order = 10;
+}
+
+enum Collection {
+  FOOTER = 0;
+}
+
+// Request for the `PageByID` method
+message PageByIDRequest {
+  string id = 1;
+}
+
+// Request for the `PageBySlug` method
+message PageBySlugRequest {
+  string slug = 1;
+}
+
+// Pagination
+message Pagination {
+  int64 page = 1;
+  int64 limit = 2;
+}
+
+// The type of sort to apply, ascending or descending
+enum SortDirection {
+  ASC = 0;
+  DSC = 1;
+}
+
+// Fields we can sort pages by
+enum SortField {
+  CREATE_DATE = 0;
+  UPDATE_DATE = 1;
+  DELETE_DATE = 2;
+  ORDER = 3;
+  TITLE = 4;
+}
+
+// Sort field + sort direction
+message SortOption {
+  SortField field = 1;
+  SortDirection direction = 2;
+}
+
+// Fields we can filter pages by
+message Filter {
+  // Search by deleted state
+  bool deleted = 1;
+  // Search by collection
+  Collection collection = 2;
+  // Search for sub-pages by parent
+  string parent_id = 3;
+}
+
+// Get paginaged list of Pages
+message ListPagesRequest {
+  Pagination pagination = 1; // Paginated response
+  repeated SortOption sort = 2; // Sort response
+  Filter filter = 3; // Filter pages
+}
+
+// Request for getting content by Page ID which is a UUID v4
+message PageContentRequest {
+  string page_id = 1;
+  string page_slug = 2;
+}
+
+// Response for ListPages
+message ListPagesResponse {
+  repeated Page pages = 1;
+  int64 total = 2; // Total number of pages that match the search
+}
+
+// Request for reordering a page
+message ReorderPageRequest {
+  string page_id = 1;
+  int64 order = 2;
+}

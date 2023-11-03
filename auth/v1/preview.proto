@@ -1,0 +1,59 @@
+// Preview token authentication
+// Handles generating and validating JWT based preview tokens
+// These tokens are primarily used for previewing unpublished content
+// on the frontend
+
+syntax = "proto3";
+
+package paralympics.preview.v1;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "go.soon.build/bpa/website/protogen-go/auth/preview/v1;preview";
+
+// Manages Generating and validating preview tokens
+service PreviewAuthenticator {
+  // Generates a new preview token
+  rpc GenerateToken(GenerateTokenRequest) returns (GenerateTokenResponse) {}
+
+  // Validates a token
+  rpc ValidateToken(ValidateTokenRequest) returns (google.protobuf.Empty) {}
+}
+
+// Types of subject we can preview - we can easily append
+// to this as and when we need to add more
+enum SubjectType {
+  Article = 0;
+}
+
+// Request for [GenerateToken](paralympics.preview.v1.PreviewAuthenticator.GenerateToken)
+message GenerateTokenRequest {
+  // Type of subject we wish to preview, e.g Article
+  SubjectType type = 1;
+
+  // The subject we wish to preview, this maybe an article or another
+  // piece of unpublished content - this will usually be a uuid
+  string subject = 2;
+}
+
+// Response for [GenerateToken](paralympics.preview.v1.PreviewAuthenticator.GenerateToken)
+message GenerateTokenResponse {
+  // The generated token
+  string token = 1;
+
+  // The time the token will expire
+  google.protobuf.Timestamp expire = 2;
+}
+
+// Request for [ValidateToken](paralympics.preview.v1.PreviewAuthenticator.ValidateToken)
+message ValidateTokenRequest {
+  // Type of thing we are validating the token for
+  SubjectType type = 1;
+
+  // The subject we the token should be for
+  string subject = 2;
+
+  // The token to validate
+  string token = 3;
+}

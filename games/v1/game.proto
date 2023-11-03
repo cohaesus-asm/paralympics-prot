@@ -1,0 +1,235 @@
+syntax = "proto3";
+
+package paralympics.games.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+option go_package = "go.soon.build/bpa/website/protogen-go/games/v1;games";
+
+// Paralympics Game Service
+service GameManager {
+  // Gets a single Game
+  rpc GameByID(GameByIDRequest) returns (Game) {}
+  rpc GameBySlug(GameBySlugRequest) returns (Game) {}
+  // Lists all the Games
+  rpc ListGames(ListGamesRequest) returns (ListGamesResponse) {}
+  // Creates or Updates an Game
+  rpc PutGame(Game) returns (Game) {}
+  // Deletes an Game
+  rpc DeleteGame(Game) returns (google.protobuf.Empty) {}
+  // Restore an article that is soft deleted
+  rpc Restore(RestoreRequest) returns (RestoreResponse) {}
+  // Purge hard deletes a game and it's relations
+  rpc Purge(PurgeRequest) returns (PurgeResponse) {}
+  // ActiveGames returns the currently active games
+  // These are depermined by the season and and their active flags
+  rpc ActiveGames(ActiveGamesRequest) returns (ActiveGamesResponse) {}
+  // SetActiveGame will set the game to be the active game for it's season
+  rpc SetActiveGame(SetActiveGameRequest) returns (SetActiveGameResponse) {}
+  // PromoteGame will promote an acive game to the "featured" game on the site
+  rpc PromoteGame(PromoteGameRequest) returns (PromoteGameResponse) {}
+  // PromotedGame returns the currently promoted game
+  rpc PromotedGame(PromotedGameRequest) returns (PromotedGameResponse) {}
+  // PinSports pins sports to a game
+  rpc PinSports(PinSportsRequest) returns (PinSportsResponse) {}
+}
+
+// A Game stored in the content service
+message Game {
+  string id = 1;
+  string slug = 2;
+  google.protobuf.Timestamp create_date = 3;
+  google.protobuf.Timestamp update_date = 4;
+  google.protobuf.Timestamp delete_date = 5;
+  string location = 6;
+  Season season = 7;
+  bool active = 8;
+  bool promoted = 9;
+  google.protobuf.Timestamp start_date = 10;
+  google.protobuf.Timestamp end_date = 11;
+  string logo = 12;
+  string blurb = 13;
+}
+
+// Seasons a game can be in
+enum Season {
+  NONE = 0;
+  WINTER = 1;
+  SUMMER = 2;
+}
+
+// Fields we can sort Games by
+enum SortField {
+  CREATE_DATE = 0;
+  UPDATE_DATE = 1;
+  DELETE_DATE = 2;
+  LOCATION = 3;
+}
+// Sort field + sort direction
+message SortOption {
+  SortField field = 1;
+  SortDirection direction = 2;
+}
+
+// Fields we can filter games by
+message Filter {
+  bool active = 1; // Search by active state
+  bool promoted = 2; // Search by promoted state
+  Season season = 3; // Search by game season
+  bool deleted = 4; // List deleted games
+  string location = 5; // Search by location - not a fuzzy search
+}
+
+// Request for the `GameByID` method
+message GameByIDRequest {
+  string id = 1;
+}
+
+// Request for the `GameBySlug` method
+message GameBySlugRequest {
+  string slug = 1;
+}
+
+// Pagination
+message Pagination {
+  int64 page = 1;
+  int64 limit = 2;
+}
+
+// The type of sort to apply, ascending or descending
+enum SortDirection {
+  ASC = 0;
+  DSC = 1;
+}
+
+// Get paginaged list of Games
+message ListGamesRequest {
+  Pagination pagination = 1; // Paginated response
+  repeated SortOption sort = 2; // Sort response
+  Filter filter = 3; // Filter Games
+}
+
+// Response for ListGames
+message ListGamesResponse {
+  repeated Game games = 1;
+  int64 total = 2; // Total number of games that match the search
+}
+
+// Field mapping used in validation errors
+enum Field {
+  GameId = 0;
+  GameSlug = 1;
+  GameLocation = 2;
+  GameSeason = 3;
+  GameActive = 4;
+  GamePromoted = 5;
+  GameStartDate = 6;
+  GameEndDate = 7;
+  GameLogo = 8;
+  GameBlurb = 9;
+}
+
+// Error Codes returned as part of validation errors
+enum ErrorCode {
+  // Generic error codes
+  Required = 0;
+  InvalidUUIDv4 = 1;
+  InvalidURI = 2;
+}
+
+// Field Validation Error
+message FieldError {
+  // Field the error occured on
+  Field field = 1;
+
+  // Error that occured
+  ErrorCode code = 2;
+}
+
+// Validation error response messages
+message ValidationError {
+  // Validation errors that occured
+  repeated FieldError errors = 1;
+}
+
+// Request for [ActiveGames](paralympics.games.v1.GameManger.ActiveGames)
+message ActiveGamesRequest {
+  // An empty request
+}
+
+// Response for [ActiveGames](paralympics.games.v1.GameManger.ActiveGames)
+message ActiveGamesResponse {
+  // The currently active summer game
+  Game summer = 1;
+  // The currently active winter game
+  Game winter = 2;
+}
+
+// Request for [SetActiveGame](paralympics.games.v1.GameManger.SetActiveGame)
+message SetActiveGameRequest {
+  // The game to acivate
+  string id = 1;
+}
+
+// Response for [SetActiveGame](paralympics.games.v1.GameManger.SetActiveGame)
+message SetActiveGameResponse {
+  // An empty response
+}
+
+// Request for [PromoteGame](paralympics.games.v1.GameManger.PromoteGame)
+message PromoteGameRequest {
+  // id of the game to promote
+  string id = 1;
+}
+
+// Response for [PromoteGame](paralympics.games.v1.GameManger.PromoteGame)
+message PromoteGameResponse {
+  // An empty response
+}
+
+// Request for [PromotedGame](paralympics.games.v1.GameManger.PromotedGame)
+message PromotedGameRequest {
+  // An empty request
+}
+
+// Response for [PromotedGame](paralympics.games.v1.GameManger.PromotedGame)
+message PromotedGameResponse {
+  Game game = 1;
+}
+
+// Request for [PinSports](paralympics.games.v1.GameManger.PinSports)
+message PinSportsRequest {
+  // Game to pin a sport too
+  string game_id = 1;
+
+  // List of sports to pin to the game
+  repeated string sports = 2;
+}
+
+// Response for [PinSports](paralympics.games.v1.GameManger.PinSports)
+message PinSportsResponse {
+  // An empty response
+}
+
+// Request for [Restore](paralympics.games.v1.GameManager.Restore)
+message RestoreRequest {
+  // Id of the game to restore
+  string id = 1;
+}
+
+// Response for [Restore](paralympics.games.v1.GameManager.Restore)
+message RestoreResponse {
+  // The restored game
+  Game game = 1;
+}
+
+// Request for [Purge](paralympics.games.v1.GameManager.Purge)
+message PurgeRequest {
+  // Id of the game to restore
+  string id = 1;
+}
+
+// Response for [Purge](paralympics.games.v1.GameManager.Purge)
+message PurgeResponse {
+  // An empty response
+}

@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package paralympics.content.v1;
+
+option go_package = "go.soon.build/bpa/website/protogen-go/content/v1;content";
+
+// A content module stored in the content service
+message ContentModule {
+  string id = 1;
+  int64 order = 2;
+  Type type = 3;
+  // TEXT
+  string text = 4;
+  string text_html = 5;
+  string chapter_heading = 6;
+  // IMAGE
+  Image image = 7;
+  string image_alt = 8;
+  string image_caption = 9;
+  bool image_full_screen = 10;
+  // QUOTE
+  string quote_text = 11;
+  string quote_author = 12;
+  // HIGHLIGHT
+  string highlight_text = 13;
+  // VIDEO
+  string video_url = 14;
+  string video_caption = 15;
+  Image video_cover = 16;
+  string video_title = 17;
+  // CLASSIFICATION
+  string dropdown_title = 18;
+  // ACHIEVEMENT
+  string achievement_game = 19;
+  int64 achievement_gold = 20;
+  int64 achievement_silver = 21;
+  int64 achievement_bronze = 22;
+  // PROFILE
+  string title = 23;
+  string sub_title = 24;
+  string link = 25;
+}
+
+// Type of content in module instance
+enum Type {
+  TEXT = 0;
+  IMAGE = 1;
+  QUOTE = 2;
+  HIGHLIGHT = 3;
+  VIDEO = 4;
+  CLASSIFICATION = 5;
+  ACHIEVEMENT = 6;
+  PROFILE = 7;
+}
+
+// ImageCrop represents crop dimensions
+message ImageCrop {
+  int64 width = 1;
+  int64 height = 2;
+  int64 offset_x = 3;
+  int64 offset_y = 4;
+}
+
+// Image represents an image with source and crop
+message Image {
+  string source = 1;
+  ImageCrop crop = 2;
+}

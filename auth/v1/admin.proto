@@ -1,0 +1,191 @@
+// Admin authentication services and types
+// Handles managing users and authenticating them for admin access
+
+syntax = "proto3";
+
+package paralympics.auth.v1;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "go.soon.build/bpa/website/protogen-go/auth/admin/v1;admin";
+
+// Manages admin users
+service AdminUserManager {
+  // Create a New User
+  rpc CreateUser(CreateUserRequest) returns (User) {}
+
+  // Update a User
+  rpc UpdateUser(User) returns (User) {}
+
+  // Get a user by their ID returns a specific user
+  rpc GetUserByID(GetUserByIDRequest) returns (User) {}
+
+  // Get a user by their email address
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (User) {}
+
+  // Explictly set a users password
+  rpc SetUserPassword(SetUserPasswordRequest) returns (google.protobuf.Empty) {}
+
+  // Validates a users password
+  rpc ValidatePassword(ValidatePasswordRequest) returns (google.protobuf.Empty) {}
+
+  // Hard delete a user
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {}
+}
+
+// Authenticates users and admin tokens
+service AdminAuthenticator {
+  // Authenticates a user bassed on email and password
+  rpc AuthenticateUser(AuthenticateUserRequest) returns (AuthenticateUserResponse) {}
+
+  // Authenticates a token
+  rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
+
+  // Revoke removes a token invalidating it for further authentication requests
+  rpc Revoke(RevokeRequest) returns (google.protobuf.Empty) {}
+}
+
+// Field mapping used in validation errors
+enum Field {
+  UserId = 0;
+  UserEmail = 1;
+  UserName = 2;
+  Password = 3;
+  PasswordConfirm = 4;
+}
+
+// Error Codes returned as part of validation errors
+enum ErrorCode {
+  option allow_alias = true;
+  // Generic error codes
+  Required = 0;
+  InvalidUUIDv4 = 1;
+  // Email error codes
+  EmailMalformed = 2;
+  MalformedEmail = 2; // TODO: Deprecate
+  EmailConflict = 3;
+  // Password error codes
+  PasswordsDoNotMatch = 4;
+  PasswordGTE6 = 5; // Password must be Greater Than or Equal to 6 characters long
+}
+
+// Field Validation Error
+message FieldError {
+  // Field the error occured on
+  Field field = 1;
+
+  // Error that occured
+  ErrorCode code = 2;
+}
+
+// Validation error response messages
+message ValidationError {
+  // Validation errors that occured
+  repeated FieldError errors = 1;
+}
+
+// Request for [CreateUser](auth.v1.admin.AdminUserManager.CreateUser)
+message CreateUserRequest {
+  // User to create
+  User user = 1;
+
+  // User authentication password
+  string password = 2;
+
+  // Confirm user authentication password
+  string password_confirm = 3;
+}
+
+// User
+message User {
+  // Unique user ID (UUIDv4)
+  string id = 1;
+
+  // User created date
+  google.protobuf.Timestamp create_date = 2;
+
+  // User updated date
+  google.protobuf.Timestamp update_date = 3;
+
+  // Users email address, also unique
+  string email = 4;
+
+  // Users full name
+  string name = 5;
+}
+
+// Request for [GetUserByID](auth.v1.admin.AdminUserManager.GetUserByID)
+message GetUserByIDRequest {
+  // User UUIDv4
+  string id = 1;
+}
+
+// Request for [GetUserByEmail](auth.v1.admin.AdminUserManager.GetUserByEmail)
+message GetUserByEmailRequest {
+  // Email address
+  string email = 1;
+}
+
+// Request for [SetUserPassword](auth.v1.admin.AdminUserManager.SetUserPassword)
+message SetUserPasswordRequest {
+  // User UUIDv4
+  string id = 1;
+
+  // New authentication password
+  string password = 2;
+
+  // New authentication confirm password
+  string password_confirm = 3;
+}
+
+// Request for [ValidatePassword](auth.v1.admin.AdminUserManager.ValidatePassword)
+message ValidatePasswordRequest {
+  // User UUIDv4
+  string id = 1;
+
+  // Password to validate
+  string password = 2;
+}
+
+// Request for [DeleteUser](auth.v1.admin.AdminUserManager.DeleteUser)
+message DeleteUserRequest {
+  // User UUIDv4 to delete
+  string id = 1;
+}
+
+// Request for [AuthenticateUser](auth.v1.admin.Authenticator.AuthenticateUser)
+message AuthenticateUserRequest {
+  // User login email address
+  string email = 1;
+
+  // User password
+  string password = 2;
+}
+
+// Response for [Authenticate](auth.v1.admin.Authenticator.Authenticate)
+message AuthenticateUserResponse {
+  // User that was authenticated
+  User user = 1;
+
+  // Admin token to use for susequent requests
+  string token = 2;
+}
+
+// Request for [Authenticate](auth.v1.admin.Authenticator.Authenticate)
+message AuthenticateRequest {
+  // token to authenticate
+  string token = 1;
+}
+
+// Response for [Authenticate](auth.v1.admin.Authenticator.Authenticate)
+message AuthenticateResponse {
+  // User ID the token is registered too
+  string userId = 1 ;
+}
+
+// Request for [Revoke](auth.v1.admin.Authenticator.Revoke)
+message RevokeRequest {
+  // token to revoke
+  string token = 1;
+}
