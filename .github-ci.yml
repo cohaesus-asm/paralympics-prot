@@ -46,7 +46,7 @@ go:
     - go get github.com/golang/protobuf/protoc-gen-go
     - git clone git@github.com:cohaesus-asm/paralympics-prot $CODEGEN_DIR
     - INCLUDE=.:/usr/include make go
-    - rsync -aIP --delete --exclude 'README.md' --exclude 'go.*' --exclude '.git/*' codegen/go/cohaesus-asm/paralympics-prot/protogen-py27.git $CODEGEN_DIR
+    - rsync -aIP --delete --exclude 'README.md' --exclude 'go.*' --exclude '.git/*' codegen/go/cohaesus-asm/paralympics-prot $CODEGEN_DIR
 
 # Generate python code and push to gitlab.com
 python27:
@@ -59,7 +59,7 @@ python27:
   script:
     - apk update && apk add build-base linux-headers make git protobuf protobuf-dev openssh rsync
     - pip install grpcio-tools
-    - git clone git@github.com:cohaesus-asm/paralympics-prot/protogen-py27.git $CODEGEN_DIR
+    - git clone git@github.com:cohaesus-asm/paralympics-prot $CODEGEN_DIR
     - INCLUDE=.:/usr/include make py27
     - rsync -aIP --delete --exclude 'README.md' --exclude '.git/*' codegen/py27/ $CODEGEN_DIR
 
@@ -80,6 +80,6 @@ ts:
       mv protoc3/include/* /usr/local/include/
     - npm --global install ts-protoc-gen
     - npm --global install --unsafe-perm grpc grpc-tools
-    - git clone git@github.com:cohaesus-asm/paralympics-prot/protogen-ts.git $CODEGEN_DIR
+    - git clone git@github.com:cohaesus-asm/paralympics-prot $CODEGEN_DIR
     - INCLUDE=.:/usr/include make ts
     - rsync -aIP --delete --exclude 'README.md' --exclude 'package.json' --exclude 'grpc.js'  --exclude '.git/*' codegen/ts/ $CODEGEN_DIR
