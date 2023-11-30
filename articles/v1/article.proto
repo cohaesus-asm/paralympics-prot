@@ -1,0 +1,336 @@
+syntax = "proto3";
+
+package paralympics.articles.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "content/v1/content.proto";
+import "athletes/v1/athlete.proto";
+
+option go_package = "go.soon.build/bpa/website/protogen-go/articles/v1;articles";
+
+// Paralympics Article Service
+service ArticleManager {
+  // Get an article by it's unique by UUID
+  rpc ArticleByID(ArticleByIDRequest) returns (Article) {}
+  // Get an article by it's unique slug
+  rpc ArticleBySlug(ArticleBySlugRequest) returns (Article) {}
+  // Lists all the Articles
+  rpc ListArticles(ListArticlesRequest) returns (ListArticlesResponse) {}
+  // LiveArticles returns a paginated list of all the currently live articls
+  rpc LiveArticles(LiveArticlesRequest) returns (LiveArticlesResponse) {}
+  // Creates or Updates an article
+  rpc PutArticle(Article) returns (Article) {}
+  // Feature an article
+  rpc FeatureArticle(FeatureArticleRequest) returns (FeatureArticleResponse) {}
+  // Returns the featured article
+  rpc FeaturedArticle(FeaturedArticleRequest) returns (FeaturedArticleResponse) {}
+  // TogglePublished toggles the publication state of an article
+  rpc TogglePublished(TogglePublishRequest) returns (TogglePublishResponse) {}
+  // Deletes an article
+  rpc DeleteArticle(Article) returns (google.protobuf.Empty) {}
+  // Restore an article that is soft deleted
+  rpc Restore(RestoreRequest) returns (RestoreResponse) {}
+  // Purge hard deletes an article and relations
+  rpc Purge(PurgeRequest) returns (PurgeResponse) {}
+  // List article content
+  rpc ArticleContent(ArticleContentRequest) returns (stream content.v1.ContentModule) {}
+  // Creates or Updates article content
+  rpc PutArticleContent(stream content.v1.ContentModule) returns (stream content.v1.ContentModule) {}
+  // PinAthletes pins athletes to an article
+  rpc PinAthletes(PinAthletesRequest) returns (PinAthletesResponse) {}
+  // PinnedAthletes returns the athletes pinned to an article
+  rpc PinnedAthletes(PinnedAthletesRequest) returns (stream athletes.v1.Athlete) {}
+  // TogglePinned toggles an articles pinned state
+  rpc TogglePinned(TogglePinnedRequest) returns (TogglePinnedResponse) {}
+  // Pinned is a convenience method for returning pinned articles
+  rpc Pinned(PinnedRequest) returns (PinnedResponse) {}
+}
+
+// An Article stored in the content service
+message Article {
+  string id = 1;
+  string slug = 2;
+  google.protobuf.Timestamp create_date = 3;
+  google.protobuf.Timestamp update_date = 4;
+  google.protobuf.Timestamp delete_date = 5;
+  string title = 6;
+  string blurb = 7;
+  bool published = 8;
+  bool featured = 9;
+  google.protobuf.Timestamp publish_from = 10;
+  google.protobuf.Timestamp publish_until = 11;
+  string game_id = 12;
+  string sport_id = 13;
+  bool live = 14;
+  content.v1.Image img_card = 15;
+  content.v1.Image img_hero = 16;
+  bool rich = 17;
+  string img_card_alt = 18;
+  string img_hero_alt = 19;
+  bool pinned = 20;
+  Category category = 21;
+}
+
+// Fields we can sort articles by
+enum SortField {
+  CREATE_DATE = 0;
+  UPDATE_DATE = 1;
+  DELETE_DATE = 2;
+  PUBLISH_FROM = 3;
+  PUBLISH_UNTIL = 4;
+  PUBLISHED = 5;
+  TITLE = 6;
+}
+
+// Sort field + sort direction
+message SortOption {
+  SortField field = 1;
+  SortDirection direction = 2;
+}
+
+// PinnedFilter are used for filter articles by their pinned state
+enum PinnedFilter {
+  ALL = 0;
+  PINNED = 1;
+  NOT_PINNED = 2;
+}
+
+// Fields we can filter articles by
+message Filter {
+  // // Search by live state
+  bool live = 1;
+
+  // Search by deleted state
+  bool deleted = 2;
+
+  // Search by game id
+  string game_id = 3;
+
+  // Search by sport id
+  string sport_id = 4;
+
+  // Search by athlete id
+  string athlete_id = 5;
+
+  // If true, only un articles not featured are returned, dedfault false
+  bool not_featured = 6;
+
+  // Filter articles by their pinned state
+  PinnedFilter pinned = 7;
+
+  // Filter articles by category
+  Category category = 8;
+
+  // Filter articles by title
+  string title = 9;
+}
+
+// Request for the `ArticleByID` method
+message ArticleByIDRequest {
+  string id = 1;
+}
+
+// Request for the `ArticleBySlug` method
+message ArticleBySlugRequest {
+  string slug = 1;
+}
+
+// Pagination
+message Pagination {
+  int64 page = 1;
+  int64 limit = 2;
+}
+
+// The type of sort to apply, ascending or descending
+enum SortDirection {
+  ASC = 0;
+  DSC = 1;
+}
+
+// Get paginaged list of Articles
+message ListArticlesRequest {
+  Pagination pagination = 1; // Paginated response
+  repeated SortOption sort = 2; // Sort response
+  Filter filter = 3; // Filter articles
+}
+
+// Request for getting content by Article ID which is a UUID v4
+message ArticleContentRequest {
+  string article_id = 1;
+  string article_slug = 2;
+}
+
+// Request for [TogglePublished](paralympics.article.v1.ArticleManager.TogglePublished)
+message TogglePublishRequest {
+  // Id of the article to toggle published state for
+  string id = 1;
+}
+
+// Response for [TogglePublished](paralympics.article.v1.ArticleManager.TogglePublished)
+message TogglePublishResponse {
+  // Current published state
+  bool published = 1;
+}
+
+// Response for ListArticles
+message ListArticlesResponse {
+  repeated Article articles = 1;
+  int64 total = 2; // Total number of articles that match the search
+}
+
+// Field mapping used in validation errors
+enum Field {
+  ArticleId = 0;
+  ArticleSlug = 1;
+  ArticleTitle = 2;
+  ArticleBlurb = 3;
+  ArticlePublishFrom = 4;
+  ArticlePublishUntil = 5;
+  ArticleImageCard = 6;
+  ArticleImageHero = 7;
+}
+
+// Error Codes returned as part of validation errors
+enum ErrorCode {
+  // Generic error codes
+  Required = 0;
+  InvalidUUIDv4 = 1;
+  InvalidURI = 2;
+  // Publishing error codes
+  PublishUntilGTPublishFrom = 3;
+  // Image error codes
+  ImageInvalid = 4;
+}
+
+// Field Validation Error
+message FieldError {
+  // Field the error occured on
+  Field field = 1;
+
+  // Error that occured
+  ErrorCode code = 2;
+}
+
+// Validation error response messages
+message ValidationError {
+  // Validation errors that occured
+  repeated FieldError errors = 1;
+}
+
+// Request for [FeatureArticle](paralympics.articles.v1.ArticleManager.FeatureArticle)
+message FeatureArticleRequest {
+  // Article ID to feature
+  string id = 1;
+}
+
+// Response for [FeatureArticle](paralympics.articles.v1.ArticleManager.FeatureArticle)
+message FeatureArticleResponse {
+  // Indicates if the article has been featured - check the error state if false
+  bool featured = 1;
+}
+
+// Request for [FeaturedArticle](paralympics.articles.v1.ArticleManager.FeaturedArticle)
+message FeaturedArticleRequest {
+  // Currently an empty message
+}
+
+// Response for [FeaturedArticle](paralympics.articles.v1.ArticleManager.FeaturedArticle)
+message FeaturedArticleResponse {
+  // The featured article
+  Article article = 1;
+}
+
+// Request for [LiveArticles](paralympics.articles.v1.ArticleManager.LiveArticles)
+message LiveArticlesRequest {
+  // Paginaton live articles
+  Pagination pagination = 1;
+
+  // Filter live articles
+  Filter filter = 2;
+}
+
+// Response for [LiveArticles](paralympics.articles.v1.ArticleManager.LiveArticles)
+message LiveArticlesResponse {
+  // List of live articles
+  repeated Article articles = 1;
+
+  // Total number of articles
+  int64 total = 2;
+}
+
+// Request for [PinAthletes](paralympics.articles.v1.ArticleManager.PinAthletes)
+// This will override an existing pins for an article
+message PinAthletesRequest {
+  // Article ID to pin athletes too
+  string article_id = 1;
+
+  // List of athlete id's to pin to the article
+  repeated string athletes = 2;
+}
+
+// Response for [PinAthletes](paralympics.articles.v1.ArticleManager.PinAthletes)
+message PinAthletesResponse {
+  // Empty message
+}
+
+// Request for [PinnedAthletes](paralympics.articles.v1.ArticleManager.PinnedAthletes)
+message PinnedAthletesRequest {
+  // Article ID to get pinned athletes for
+  string article_id = 1;
+}
+
+// Request for [TogglePinned](paralympics.articles.v1.ArticleManager.TogglePinned)
+message TogglePinnedRequest {
+  // Article ID to toggle pinned state
+  string id = 1;
+}
+
+// Response for [TogglePinned](paralympics.articles.v1.ArticleManager.TogglePinned)
+message TogglePinnedResponse {
+  // The articles pinned state
+  bool pinned = 1;
+}
+
+// Request for [Pinned](paralympics.articles.v1.ArticleManager.Pinned)
+message PinnedRequest {
+  // An empty request
+}
+
+// Response for [Pinned](paralympics.articles.v1.ArticleManager.Pinned)
+message PinnedResponse {
+  // List of pinned articles
+  repeated Article articles = 1;
+}
+
+// Request for [Restore](paralympics.articles.v1.ArticleManager.Restore)
+message RestoreRequest {
+  // Id of the article to restore
+  string id = 1;
+}
+
+// Response for [Restore](paralympics.articles.v1.ArticleManager.Restore)
+message RestoreResponse {
+  // The restored article
+  Article article = 1;
+}
+
+// Request for [Purge](paralympics.articles.v1.ArticleManager.Purge)
+message PurgeRequest {
+  // Id of the article to restore
+  string id = 1;
+}
+
+// Response for [Purge](paralympics.articles.v1.ArticleManager.Purge)
+message PurgeResponse {
+  // An empty response
+}
+
+// Category represents categorisation of articles
+enum Category {
+  NONE = 0;
+  SUPPORT_FUNDRAISING = 1;
+  SUPPORT_EVENTS = 2;
+  SUPPORT_CORPORATE = 3;
+  SUPPORT_GIFTS = 4;
+}

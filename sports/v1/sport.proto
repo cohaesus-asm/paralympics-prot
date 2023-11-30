@@ -1,0 +1,219 @@
+syntax = "proto3";
+
+package paralympics.sports.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "content/v1/content.proto";
+import "content/v1/social.proto";
+
+option go_package = "go.soon.build/bpa/website/protogen-go/sports/v1;sports";
+
+// Paralympics Sport Service
+service SportManager {
+  // Gets a single Sport
+  rpc SportByID(SportByIDRequest) returns (Sport) {}
+  rpc SportBySlug(SportBySlugRequest) returns (Sport) {}
+  // Lists all the Sports
+  rpc ListSports(ListSportsRequest) returns (ListSportsResponse) {}
+  // Creates or Updates an Sport
+  rpc PutSport(Sport) returns (Sport) {}
+  // Deletes an Sport
+  rpc DeleteSport(Sport) returns (google.protobuf.Empty) {}
+  // Restore an article that is soft deleted
+  rpc Restore(RestoreRequest) returns (RestoreResponse) {}
+  // Purge hard deletes a sport and it's relations
+  rpc Purge(PurgeRequest) returns (PurgeResponse) {}
+  // List Sport content
+  rpc SportContent(SportContentRequest) returns (stream content.v1.ContentModule) {}
+  // Creates or Updates Sport content
+  rpc PutSportContent(stream content.v1.ContentModule) returns (stream content.v1.ContentModule) {}
+  // ToggleFeatured toggles a sports featured status, if on it will be turned off, if off it will be turned on
+  rpc ToggleFeatured(ToggleFeaturedRequest) returns (ToggleFeaturedResponse) {}
+  // Featured returns a stream of featured sports
+  rpc Featured(FeaturedRequest) returns (stream Sport) {}
+}
+
+// A Sport stored in the content service
+message Sport {
+  string id = 1;
+  string slug = 2;
+  google.protobuf.Timestamp create_date = 3;
+  google.protobuf.Timestamp update_date = 4;
+  google.protobuf.Timestamp delete_date = 5;
+  string name = 6;
+  Season season = 7;
+  string icon = 8;
+  content.v1.Image img_card = 9;
+  content.v1.Image img_hero = 10;
+  bool featured = 11;
+  ExtLink ext_link = 12;
+  repeated content.v1.SocialProfile social_profiles = 13;
+  string img_card_alt = 14;
+  string img_hero_alt = 15;
+  string lead = 16;
+  string body = 17;
+  string body_html = 18;
+}
+
+// Seasons a sport can be in
+enum Season {
+  NONE = 0;
+  WINTER = 1;
+  SUMMER = 2;
+}
+
+// An external site link
+message ExtLink {
+  string label = 1;
+  string url = 2;
+}
+
+// Fields we can sort Sports by
+enum SortField {
+  CREATE_DATE = 0;
+  UPDATE_DATE = 1;
+  DELETE_DATE = 2;
+  NAME = 3;
+}
+
+// Sort field + sort direction
+message SortOption {
+  SortField field = 1;
+  SortDirection direction = 2;
+}
+
+// FeaturedFilter - it's not a binary choice XD
+enum FeaturedFilter {
+  Either = 0;
+  Featured = 1;
+  NotFeatured = 2;
+}
+
+// Fields we can filter sports by
+message Filter {
+  bool deleted = 1; // Search by deleted state
+  Season season = 2; // Search by sport season
+  string game_id = 3; // Search by related game
+  FeaturedFilter featured = 4; // Filter by featured flag
+  string name = 5; // Name filter - not a fuzzy search - exact match
+}
+
+// Request for the `SportByID` method
+message SportByIDRequest {
+  string id = 1;
+}
+
+// Request for the `SportBySlug` method
+message SportBySlugRequest {
+  string slug = 1;
+}
+
+// Pagination
+message Pagination {
+  int64 page = 1;
+  int64 limit = 2;
+}
+
+// The type of sort to apply, ascending or descending
+enum SortDirection {
+  ASC = 0;
+  DSC = 1;
+}
+
+// Get paginaged list of Sports
+message ListSportsRequest {
+  Pagination pagination = 1; // Paginated response
+  repeated SortOption sort = 2; // Sort response
+  Filter filter = 3; // Filter Sports
+}
+
+// Request for getting content by Sport ID which is a UUID v4
+message SportContentRequest {
+  string sport_id = 1;
+  string sport_slug = 2;
+}
+
+// Response for ListSports
+message ListSportsResponse {
+  repeated Sport sports = 1;
+  int64 total = 2; // Total number of sports that match the search
+}
+
+// Field mapping used in validation errors
+enum Field {
+  SportId = 0;
+  SportSlug = 1;
+  SportName = 2;
+  SportSeason = 3;
+  SportIcon = 4;
+  SportImgCard = 5;
+  SportImgHero = 6;
+  SportLead = 7;
+  SportBody = 8;
+}
+
+// Error Codes returned as part of validation errors
+enum ErrorCode {
+  // Generic error codes
+  Required = 0;
+  InvalidUUIDv4 = 1;
+  InvalidURI = 2;
+  // Image error codes
+  ImageInvalid = 3;
+}
+
+// Field Validation Error
+message FieldError {
+  // Field the error occured on
+  Field field = 1;
+
+  // Error that occured
+  ErrorCode code = 2;
+}
+
+// Validation error response messages
+message ValidationError {
+  // Validation errors that occured
+  repeated FieldError errors = 1;
+}
+
+// Request for [ToggleFeatured](paralympics.games.v1.SportManager.ToggleFeatured)
+message ToggleFeaturedRequest {
+  // Id of the sport to toggle the state for
+  string id = 1;
+}
+
+// Response for [ToggleFeatured](paralympics.games.v1.SportManager.ToggleFeatured)
+message ToggleFeaturedResponse {
+  // The now featured state of the sport
+  bool featured = 1;
+}
+
+// Request for [Featured](paralympics.games.v1.SportManager.Featured)
+message FeaturedRequest {
+  // An empty request
+}
+
+// Request for [Restore](paralympics.sports.v1.SportManager.Restore)
+message RestoreRequest {
+  // Id of the sport to restore
+  string id = 1;
+}
+
+// Response for [Restore](paralympics.sports.v1.SportManager.Restore)
+message RestoreResponse {
+  // The restored sport
+  Sport sport = 1;
+}
+
+// Request for [Purge](paralympics.sports.v1.SportManager.Purge)
+message PurgeRequest {
+  // Id of the sport to restore
+  string id = 1;
+}
+
+// Response for [Purge](paralympics.sports.v1.SportManager.Purge)
+message PurgeResponse {
+  // An empty response
+}

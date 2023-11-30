@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package paralympics.donations.v1;
+
+option go_package = "go.soon.build/bpa/website/protogen-go/donations/v1;donations";
+
+// Paralympics Donation Service
+service Donations {
+  // Make a new donation
+  rpc Donate(Donation) returns (DonateResponse) {}
+}
+
+// Response for `Donate` method
+message DonateResponse {
+  string id = 1;
+  string client_secret = 2;
+}
+
+// A request to make a donation
+message Donation {
+  string name = 1;
+  string email = 2;
+  int64 amount = 3;
+  Address billing_address = 4;
+  bool giftaid = 5;
+}
+
+// An address for billing
+message Address {
+  string line1 = 1;
+  string city = 2;
+  string postal_code = 3;
+  string country = 4;
+}

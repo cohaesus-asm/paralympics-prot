@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package paralympics.support.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "content/v1/content.proto";
+import "articles/v1/article.proto";
+
+option go_package = "go.soon.build/bpa/website/protogen-go/support/v1;support";
+
+// Paralympics Support Service
+service SupportManager {
+  // Get a support section by it's unique by UUID
+  rpc SectionByID(SectionByIDRequest) returns (SupportSection) {}
+  // Get a support section by it's unique slug
+  rpc SectionBySlug(SectionBySlugRequest) returns (SupportSection) {}
+  // Lists all the Support Sections
+  rpc ListSections(ListSectionsRequest) returns (ListSectionsResponse) {}
+  // Creates or Updates a support section
+  rpc PutSection(SupportSection) returns (SupportSection) {}
+  // Deletes a support section
+  rpc DeleteSection(SupportSection) returns (google.protobuf.Empty) {}
+  // Reorders support sections
+  rpc ReorderSection(ReorderSectionRequest) returns (google.protobuf.Empty) {}
+}
+
+// A SupportSection stored in the content service
+message SupportSection {
+  string id = 1;
+  string slug = 2;
+  string title = 3;
+  google.protobuf.Timestamp create_date = 4;
+  google.protobuf.Timestamp update_date = 5;
+  google.protobuf.Timestamp delete_date = 6;
+  content.v1.Image hero_img = 7;
+  string hero_img_alt = 8;
+  string hero_text = 9;
+  articles.v1.Category article_category = 10;
+  string intro_chapter_heading = 11;
+  string intro_lead = 12;
+  string intro_text = 13;
+  string intro_text_html = 16;
+  string intro_link = 14 [deprecated=true];
+  string intro_article_id = 17;
+  int64 order = 15;
+}
+
+// Request for the `SectionByID` method
+message SectionByIDRequest {
+  string id = 1;
+}
+
+// Request for the `SectionBySlug` method
+message SectionBySlugRequest {
+  string slug = 1;
+}
+
+// Pagination
+message Pagination {
+  int64 page = 1;
+  int64 limit = 2;
+}
+
+// The type of sort to apply, ascending or descending
+enum SortDirection {
+  ASC = 0;
+  DSC = 1;
+}
+
+// Fields we can sort pages by
+enum SortField {
+  CREATE_DATE = 0;
+  UPDATE_DATE = 1;
+  DELETE_DATE = 2;
+  TITLE = 3;
+  ORDER = 4;
+}
+
+// Sort field + sort direction
+message SortOption {
+  SortField field = 1;
+  SortDirection direction = 2;
+}
+
+// Fields we can filter pages by
+message Filter {
+  // Search by deleted state
+  bool deleted = 1;
+  // Search by article category
+  articles.v1.Category category = 2;
+}
+
+// Get paginaged list of Sections
+message ListSectionsRequest {
+  Pagination pagination = 1; // Paginated response
+  repeated SortOption sort = 2; // Sort response
+  Filter filter = 3; // Filter pages
+}
+
+// Response for ListSections
+message ListSectionsResponse {
+  repeated SupportSection sections = 1;
+  int64 total = 2; // Total number of pages that match the search
+}
+
+// Request for reordering a support section
+message ReorderSectionRequest {
+  string id = 1;
+  int64 order = 2;
+}

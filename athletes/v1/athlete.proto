@@ -1,0 +1,304 @@
+syntax = "proto3";
+
+package paralympics.athletes.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "content/v1/content.proto";
+import "content/v1/social.proto";
+import "sports/v1/sport.proto";
+import "games/v1/game.proto";
+
+option go_package = "go.soon.build/bpa/website/protogen-go/athletes/v1;athletes";
+
+// Paralympics Athlete Service
+service AthleteManager {
+  // Gets a single Athlete
+  rpc AthleteByID(AthleteByIDRequest) returns (Athlete) {}
+  rpc AthleteBySlug(AthleteBySlugRequest) returns (Athlete) {}
+  // Lists all the Athletes
+  rpc ListAthletes(ListAthletesRequest) returns (ListAthletesResponse) {}
+  // Creates or Updates an Athlete
+  rpc PutAthlete(Athlete) returns (Athlete) {}
+  // Deletes an Athlete
+  rpc DeleteAthlete(Athlete) returns (google.protobuf.Empty) {}
+  // Restore an article that is soft deleted
+  rpc Restore(RestoreRequest) returns (RestoreResponse) {}
+  // Purge hard deletes an athlete and relations
+  rpc Purge(PurgeRequest) returns (PurgeResponse) {}
+  // List Athlete content
+  rpc AthleteContent(AthleteContentRequest) returns (stream content.v1.ContentModule) {}
+  // Creates or Updates Athlete content
+  rpc PutAthleteContent(stream content.v1.ContentModule) returns (stream content.v1.ContentModule) {}
+  // PinSports pins sports to an athlete
+  rpc PinSports(PinSportsRequest) returns (PinSportsResponse) {}
+  // PinnedSports returns the sports pinned to an athlete
+  rpc PinnedSports(PinnedSportsRequest) returns (PinnedSportsResponse) {}
+  // PinGames pins sports to an athlete
+  rpc PinGames(PinGamesRequest) returns (PinGamesResponse) {}
+  // PinnedGames returns the sports pinned to an athlete
+  rpc PinnedGames(PinnedGamesRequest) returns (PinnedGamesResponse) {}
+  // Search performs a full text fuzzy search on Athletes based on names
+  rpc Search(SearchRequest) returns (stream SearchResult) {}
+  // ToggleFeatured toggles an Athletes featured state
+  rpc ToggleFeatured(ToggleFeaturedRequest) returns (ToggleFeaturedResponse) {}
+  // Featured is a convenience method that returns featured athletes
+  rpc Featured(FeaturedRequest) returns (FeaturedResponse) {}
+}
+
+// Field mapping used in validation errors
+enum Field {
+  AthleteId = 0;
+  AthleteSlug = 1;
+  AthleteName = 2;
+  AthleteRegion = 3;
+  AthleteDob = 4;
+  AthleteClass = 5;
+  AthleteImgProfile = 6;
+  AthleteHero = 7;
+  AthleteHeroAlt = 8;
+}
+
+// Error Codes returned as part of validation errors
+enum ErrorCode {
+  // Generic error codes
+  Required = 0;
+}
+
+// Field Validation Error
+message FieldError {
+  // Field the error occured on
+  Field field = 1;
+
+  // Error that occured
+  ErrorCode code = 2;
+}
+
+// Validation error response messages
+message ValidationError {
+  // Validation errors that occured
+  repeated FieldError errors = 1;
+}
+
+// An Athlete stored in the content service
+message Athlete {
+  string id = 1;
+  string slug = 2;
+  google.protobuf.Timestamp create_date = 3;
+  google.protobuf.Timestamp update_date = 4;
+  google.protobuf.Timestamp delete_date = 5;
+  string name = 6;
+  string region = 7;
+  google.protobuf.Timestamp dob = 8;
+  string class = 9;
+  repeated content.v1.SocialProfile social_profiles = 10;
+  content.v1.Image img_profile = 11;
+  content.v1.Image img_hero = 12;
+  string img_hero_alt = 13;
+  bool featured = 14;
+}
+
+// Fields we can sort Athletes by
+enum SortField {
+  CREATE_DATE = 0;
+  UPDATE_DATE = 1;
+  DELETE_DATE = 2;
+  NAME = 3;
+}
+
+// Sort field + sort direction
+message SortOption {
+  SortField field = 1;
+  SortDirection direction = 2;
+}
+
+// GameFilter allows us to filter athletes by games,
+// either by active state or id, or both
+message GameFilter {
+  // Id of the game to filter by
+  string game_id = 1;
+
+  // Filter by active game - default false
+  bool active = 2;
+}
+
+// FeaturedFilter types are used to eplicitly set whether we want
+// all athletes regardless of their feature state, only featured,\
+// or not featured athletes
+// The default value of this filter being ALL
+enum FeaturedFilter {
+  ALL = 0;
+  FEATURED = 1;
+  NOT_FEATURED = 2;
+}
+
+// Fields we can filter Athletes by
+message Filter {
+  // Filter athletes by sport
+  string sport_id = 1;
+  // Filter athletes by game
+  GameFilter game = 2;
+  // Athlete name - this isn't the same as the fuzzy search
+  string name = 3;
+  // Show only ahtletes that are deleted
+  bool deleted = 4;
+  // Athlete feature state
+  FeaturedFilter featured = 5;
+}
+
+// Pagination
+message Pagination {
+  int64 page = 1;
+  int64 limit = 2;
+}
+
+// The type of sort to apply, ascending or descending
+enum SortDirection {
+  ASC = 0;
+  DSC = 1;
+}
+
+// Get paginaged list of Athletes
+message ListAthletesRequest {
+  Pagination pagination = 1; // Paginated response
+  repeated SortOption sort = 2; // Sort response
+  Filter filter = 3; // Filter Athletes
+}
+
+// Request for the `AthleteByID` method
+message AthleteByIDRequest {
+  string id = 1;
+}
+
+// Request for the `AthleteBySlug` method
+message AthleteBySlugRequest {
+  string slug = 1;
+}
+
+// Request for getting content by Athlete ID which is a UUID v4
+message AthleteContentRequest {
+  string athlete_id = 1;
+  string athlete_slug = 2;
+}
+
+// Response for ListAthletes
+message ListAthletesResponse {
+  repeated Athlete athletes = 1;
+  int64 total = 2; // Total number of athletes that match the search
+}
+
+// Request for [PinSports](paralympics.games.v1.AthleteManager.PinSports)
+message PinSportsRequest {
+  // id of the athlete to pin sports too
+  string id = 1;
+
+  // List of sports to pin to the game
+  repeated string sports = 2;
+}
+
+// Response for [PinSports](paralympics.games.v1.AthleteManager.PinSports)
+message PinSportsResponse {
+  // An empty response
+}
+
+// Request for [PinnedSports](paralympics.games.v1.AthleteManager.PinSports)
+message PinnedSportsRequest {
+  // id of the athlete to return pinned sports for
+  string id = 1;
+}
+
+// Response for [PinnedSports](paralympics.games.v1.AthleteManager.PinSports)
+message PinnedSportsResponse {
+  // Sports pinned to an athlete
+  repeated sports.v1.Sport sports = 1;
+}
+
+// Request for [PinGames](paralympics.games.v1.AthleteManager.PinGames)
+message PinGamesRequest {
+  // id of the athlete to pin sports too
+  string id = 1;
+
+  // List of sports to pin to the game
+  repeated string games = 2;
+}
+
+// Response for [PinGames](paralympics.games.v1.AthleteManager.PinGames)
+message PinGamesResponse {
+  // An empty response
+}
+
+// Request for [PinnedGames](paralympics.games.v1.AthleteManager.PinGames)
+message PinnedGamesRequest {
+  // id of the athlete to return pinned games for
+  string id = 1;
+}
+
+// Response for [PinnedGames](paralympics.games.v1.AthleteManager.PinGames)
+message PinnedGamesResponse {
+  // Games pinned to an athlete
+  repeated games.v1.Game games = 1;
+}
+
+// Request for [Search](paralympics.games.v1.AthleteManager.Search)
+message SearchRequest {
+  // Search query
+  string query = 1;
+
+  // number of results to return
+  int32 limit = 2;
+}
+
+// SearchResult for [Search](paralympics.games.v1.AthleteManager.Search)
+message SearchResult {
+  // Athlete found
+  Athlete athlete = 1;
+
+  // Weighting - this may or may not be useful to know
+  float weighting = 2;
+}
+
+// ToggleFeaturedRequest for [ToggleFeatured](paralympics.games.v1.AthleteManager.ToggleFeatured)
+message ToggleFeaturedRequest {
+  // The id of the athlete to feature
+  string id = 1;
+}
+
+// ToggleFeaturedResponse for [ToggleFeatured](paralympics.games.v1.AthleteManager.ToggleFeatured)
+message ToggleFeaturedResponse {
+  // The featured state of the athelete
+  bool featured  = 1;
+}
+
+// FeaturedRequest for [Featured](paralympics.games.v1.AthleteManager.Featured)
+message FeaturedRequest {
+  // An empty request
+}
+
+// FeaturedResponse for [Featured](paralympics.games.v1.AthleteManager.Featured)
+message FeaturedResponse {
+  // Featured athletes
+  repeated Athlete athletes = 1;
+}
+
+// Request for [Restore](paralympics.athletes.v1.AthleteManager.Restore)
+message RestoreRequest {
+  // Id of the athlete to restore
+  string id = 1;
+}
+
+// Response for [Restore](paralympics.athletes.v1.AthleteManager.Restore)
+message RestoreResponse {
+  // The restored athlete
+  Athlete athlete = 1;
+}
+
+// Request for [Purge](paralympics.athletes.v1.AthleteManager.Purge)
+message PurgeRequest {
+  // Id of the athlete to restore
+  string id = 1;
+}
+
+// Response for [Purge](paralympics.athletes.v1.AthleteManager.Purge)
+message PurgeResponse {
+  // An empty response
+}

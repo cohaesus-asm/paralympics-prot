@@ -1,0 +1,43 @@
+// Defines services and types for handling article previewing
+
+syntax = "proto3";
+
+package paralympics.articles.v1;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.soon.build/bpa/website/protogen-go/articles/preview/v1;preview";
+
+// Service for authorizing article preview tokens
+service PreviewAuthorizer {
+  // Authorizes a token, if invalid an error will be returned else
+  // an empty response
+  rpc AuthorizeToken(AuthorizeTokenRequest) returns (google.protobuf.Empty) {}
+}
+
+// Service for generaing article preview tokens
+service PreviewTokenGenerator {
+  // Generates an article preview token for a specific article
+  rpc GenerateToken(GenerateTokenRequest) returns (GenerateTokenResponse) {}
+}
+
+// Request for [AuthorizeToken][articles.preview.PreviewAuthorizer.AuthorizeToken]
+message AuthorizeTokenRequest {
+  // token to authorize
+  string token = 1;
+}
+
+// Request for [GenerateToken][articles.preview.PreviewTokenGenerator.GenerateToken]
+message GenerateTokenRequest {
+  // article id to generate a token for
+  string article = 1;
+
+  // durration the token should last for in seconds
+  uint64 seconds = 2;
+}
+
+// Response for [GenerateToken][articles.preview.PreviewTokenGenerator.GenerateToken]
+message GenerateTokenResponse {
+  // url safe jwt token
+  string token = 1;
+}
