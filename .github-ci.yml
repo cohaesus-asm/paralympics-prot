@@ -45,7 +45,7 @@ go:
     - apk update && apk add make git protobuf protobuf-dev openssh rsync
     - go get github.com/golang/protobuf/protoc-gen-go
     - git clone git@github.com:cohaesus-asm/paralympics-prot.git $CODEGEN_DIR
-    - INCLUDE=.:/usr/include make go
+    - INCLUDE=.:/var/www/html/include make go
     - rsync -aIP --delete --exclude 'README.md' --exclude 'go.*' --exclude '.git/*' codegen/go/cohaesus-asm/paralympics-prot $CODEGEN_DIR
 
 # Generate python code and push to gitlab.com
@@ -60,7 +60,7 @@ python27:
     - apk update && apk add build-base linux-headers make git protobuf protobuf-dev openssh rsync
     - pip install grpcio-tools
     - git clone git@github.com:cohaesus-asm/paralympics-prot.git $CODEGEN_DIR
-    - INCLUDE=.:/usr/include make py27
+    - INCLUDE=.:/var/www/html/include make py27
     - rsync -aIP --delete --exclude 'README.md' --exclude '.git/*' codegen/py27/ $CODEGEN_DIR
 
 # Generate typescript code and push to gitlab.com
