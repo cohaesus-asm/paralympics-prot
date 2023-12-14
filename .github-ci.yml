@@ -20,8 +20,8 @@ stages:
     - printf "Host github.com\n    StrictHostKeyChecking no" > ~/.ssh/config
   after_script:
     - cd $CODEGEN_DIR
-    - git config user.email $GITHUB_USER_EMAIL
-    - git config user.name $GITHUB_USER_NAME
+    - git config user.email manoj.kumar@anktech.co.in
+    - git config user.name manojkumar2023
     - git add -A
     - |
       if [ "$CI_COMMIT_TAG" != "" ]; then
@@ -46,7 +46,7 @@ go:
     - go get github.com/golang/protobuf/protoc-gen-go
     - git clone git@github.com:cohaesus-asm/paralympics-prot.git $CODEGEN_DIR
     - INCLUDE=.:/var/www/html/include make go
-    - rsync -aIP --delete --exclude 'README.md' --exclude 'go.*' --exclude '.git/*' codegen/go/cohaesus-asm/paralympics-prot $CODEGEN_DIR
+    - rsync -aIP --delete --exclude 'README.md' --exclude 'go.*' --exclude '.git/*' codegen/go/ $CODEGEN_DIR
 
 # Generate python code and push to gitlab.com
 python27:
@@ -80,6 +80,6 @@ ts:
       mv protoc3/include/* /usr/local/include/
     - npm --global install ts-protoc-gen
     - npm --global install --unsafe-perm grpc grpc-tools
-    - git clone git@github.com:cohaesus-asm/paralympics-prot.git $CODEGEN_DIR
+    - git clone git@github.com:cohaesus-asm/paralympics-prot.git
     - INCLUDE=.:/usr/include make ts
     - rsync -aIP --delete --exclude 'README.md' --exclude 'package.json' --exclude 'grpc.js'  --exclude '.git/*' codegen/ts/ $CODEGEN_DIR
