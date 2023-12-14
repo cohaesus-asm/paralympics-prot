@@ -80,6 +80,6 @@ ts:
       mv protoc3/include/* /usr/local/include/
     - npm --global install ts-protoc-gen
     - npm --global install --unsafe-perm grpc grpc-tools
-    - git clone git@github.com:cohaesus-asm/paralympics-prot.git
+    - git clone git@github.com:cohaesus-asm/paralympics-prot.git $CODEGEN_DIR
     - INCLUDE=.:/usr/include make ts
     - rsync -aIP --delete --exclude 'README.md' --exclude 'package.json' --exclude 'grpc.js'  --exclude '.git/*' codegen/ts/ $CODEGEN_DIR
